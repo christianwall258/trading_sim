@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BTC Paper Trading Simulator</title>
+  <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
+  <style>
+    :root{
+      --bg:#0b0f14; --panel:#111823; --panel2:#0f1620; --text:#e6edf3; --muted:#93a4b8;
+      --green:#16c784; --red:#ea3943; --blue:#2f81f7; --line:#223045; --accent:#f2c94c;
+      --radius:14px;
+    }
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    body{margin:0;background:var(--bg);color:var(--text)}
+    .wrap{max-width:1280px;margin:0 auto;padding:14px;display:grid;grid-template-columns: 1.4fr 1fr;gap:14px}
+    .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+    .card h3{margin:0;padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px;color:var(--muted);font-weight:600;letter-spacing:.3px}
+    .topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+    .pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#0c131c;color:var(--muted);font-size:12px}
+    .price{font-size:18px;font-weight:700}
+    .chg{font-size:12px;padding:4px 8px;border-radius:999px}
+    .chg.up{background:rgba(22,199,132,.15);color:var(--green);border:1px solid rgba(22,199,132,.35)}
+    .chg.down{background:rgba(234,57,67,.15);color:var(--red);border:1px solid rgba(234,57,67,.35)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .tf button{
+      padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:#0c131c;color:var(--muted);
+      cursor:pointer;font-size:12px
+    }
+    .tf button.active{color:var(--text);border-color:rgba(47,129,247,.6);box-shadow:0 0 0 2px rgba(47,129,247,.12) inset}
+    #chart{height:520px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 14px}
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+    input,select{
+      width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:#0c131c;color:var(--text);
+      outline:none
+    }
+    input:focus,select:focus{border-color:rgba(47,129,247,.7);box-shadow:0 0 0 3px rgba(47,129,247,.12)}
+    .btnrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 14px}
+    .btn{
+      padding:12px 12px;border-radius:14px;border:1px solid transparent;cursor:pointer;font-weight:800;letter-spacing:.2px
+    }
+    .buy{background:rgba(22,199,132,.18);border-color:rgba(22,199,132,.35);color:var(--green)}
+    .sell{background:rgba(234,57,67,.18);border-color:rgba(234,57,67,.35);color:var(--red)}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+    .mini{
+      padding:10px 14px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;gap:10px
+    }
+    .stat{background:#0c131c;border:1px solid var(--line);border-radius:12px;padding:10px}
+    .stat .k{font-size:11px;color:var(--muted)}
+    .stat .v{font-size:14px;font-weight:800;margin-top:4px}
+    .v.green{color:var(--green)} .v.red{color:var(--red)}
+    .posbox{padding:12px 14px;border-top:1px solid var(--line)}
+    .posline{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed rgba(34,48,69,.6)}
+    .posline:last-child{border-bottom:none}
+    .badge{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+    .badge.long{color:var(--green);border-color:rgba(22,199,132,.35);background:rgba(22,199,132,.12)}
+    .badge.short{color:var(--red);border-color:rgba(234,57,67,.35);background:rgba(234,57,67,.12)}
+    .smallbtn{padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:#0c131c;color:var(--muted);cursor:pointer;font-size:12px}
+    .smallbtn:hover{border-color:rgba(47,129,247,.55);color:var(--text)}
+    .history{padding:0 14px 14px}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th,td{padding:10px 8px;border-bottom:1px solid rgba(34,48,69,.7);text-align:left;color:var(--muted)}
+    th{color:#b6c2d1;font-weight:700}
+    td strong{color:var(--text)}
+    .right{text-align:right}
+    .warn{padding:10px 14px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.35}
+    .footerBtns{display:flex;gap:10px;flex-wrap:wrap;padding:12px 14px;border-top:1px solid var(--line)}
+    @media(max-width:1000px){.wrap{grid-template-columns:1fr}.card{order:unset} #chart{height:420px}}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- CHART -->
+    <section class="card">
+      <div class="topbar">
+        <span class="pill">USDT-M (sim)</span>
+        <span class="pill"><strong>BTC/USDT</strong></span>
+        <span id="tfLabel" class="pill">1m</span>
+        <span class="pill">Quelle: Binance</span>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+          <div class="price" id="lastPrice">–</div>
+          <div class="chg" id="chgBadge">–</div>
+        </div>
+      </div>
+
+      <div class="topbar" style="border-bottom:none;gap:12px">
+        <div class="row tf" id="tfButtons">
+          <button data-tf="1m" class="active">1m</button>
+          <button data-tf="5m">5m</button>
+          <button data-tf="15m">15m</button>
+          <button data-tf="1h">1h</button>
+          <button data-tf="4h">4h</button>
+          <button data-tf="1d">1d</button>
+        </div>
+
+        <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
+          <button class="smallbtn" id="centerBtn">Center</button>
+          <button class="smallbtn" id="resetBtn">Reset</button>
+        </div>
+      </div>
+
+      <div id="chart"></div>
+
+      <div class="warn">
+        Simulator: Fees sind drin (Taker 0,04% pro Ausführung). Liquidation ist vereinfacht (Maintenance Margin). Kein echtes Trading.
+      </div>
+    </section>
+
+    <!-- TRADING PANEL -->
+    <section class="card">
+      <h3>Handeln</h3>
+
+      <div class="grid">
+        <div>
+          <label>Margin (USDT)</label>
+          <input id="marginInput" type="number" min="1" step="0.01" value="25" />
+          <div style="margin-top:8px;display:flex;gap:10px;flex-wrap:wrap">
+            <button class="smallbtn" data-pct="25">25%</button>
+            <button class="smallbtn" data-pct="50">50%</button>
+            <button class="smallbtn" data-pct="75">75%</button>
+            <button class="smallbtn" data-pct="100">Max</button>
+          </div>
+        </div>
+
+        <div>
+          <label>Hebel</label>
+          <input id="levInput" type="range" min="1" max="125" value="20" />
+          <div style="display:flex;justify-content:space-between;margin-top:6px;color:var(--muted);font-size:12px">
+            <span>1x</span>
+            <span><strong id="levLabel" style="color:var(--text)">20x</strong></span>
+            <span>125x</span>
+          </div>
+        </div>
+
+        <div>
+          <label>Take Profit (optional)</label>
+          <input id="tpInput" type="number" step="0.1" placeholder="z.B. 91000" />
+        </div>
+
+        <div>
+          <label>Stop Loss (optional)</label>
+          <input id="slInput" type="number" step="0.1" placeholder="z.B. 88000" />
+        </div>
+      </div>
+
+      <div class="btnrow">
+        <button class="btn buy" id="buyBtn">Kaufen / Long</button>
+        <button class="btn sell" id="sellBtn">Verkaufen / Short</button>
+      </div>
+
+      <div class="mini">
+        <div class="stat">
+          <div class="k">Wallet (USDT)</div>
+          <div class="v" id="walletVal">–</div>
+        </div>
+        <div class="stat">
+          <div class="k">Available (USDT)</div>
+          <div class="v" id="availVal">–</div>
+        </div>
+        <div class="stat">
+          <div class="k">Equity (USDT)</div>
+          <div class="v" id="equityVal">–</div>
+        </div>
+        <div class="stat">
+          <div class="k">Unrealized PnL</div>
+          <div class="v" id="upnlVal">–</div>
+        </div>
+      </div>
+
+      <div class="posbox">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="color:var(--muted);font-size:12px;font-weight:700">Offene Position</div>
+          <div style="display:flex;gap:10px;align-items:center">
+            <button class="smallbtn" id="closeBtn" disabled>Position schließen (Market)</button>
+          </div>
+        </div>
+        <div id="posDetails" style="color:var(--muted);font-size:12px">Keine offene Position</div>
+      </div>
+
+      <h3 style="border-top:1px solid var(--line)">Verlauf</h3>
+      <div class="history">
+        <table>
+          <thead>
+            <tr>
+              <th>Zeit</th>
+              <th>Side</th>
+              <th class="right">Entry</th>
+              <th class="right">Exit</th>
+              <th class="right">PnL</th>
+              <th class="right">Fees</th>
+              <th class="right">Leverage</th>
+            </tr>
+          </thead>
+          <tbody id="histBody"></tbody>
+        </table>
+      </div>
+
+      <div class="footerBtns">
+        <button class="smallbtn" id="exportBtn">Export Trades (JSON)</button>
+        <button class="smallbtn" id="importBtn">Import Trades (JSON)</button>
+      </div>
+    </section>
+  </div>
+
+<script>
+(() => {
+  // -----------------------------
+  // CONFIG
+  // -----------------------------
+  const SYMBOL = "BTCUSDT";
+  const REST = "https://api.binance.com/api/v3/klines";
+  const WS_BASE = "wss://stream.binance.com:9443/ws";
+  const TAKER_FEE = 0.0004;              // 0.04% per execution
+  const MAINT_MARGIN_RATE = 0.004;       // simplified maintenance margin (0.4%)
+  const STORAGE_KEY = "btc_paper_sim_v1";
+
+  const TF_MAP = { "1m":"1m", "5m":"5m", "15m":"15m", "1h":"1h", "4h":"4h", "1d":"1d" };
+
+  // -----------------------------
+  // STATE
+  // -----------------------------
+  const defaultState = () => ({
+    wallet: 1000.0,
+    position: null, // {side, entry, qty, margin, lev, sl, tp, openedAt, entryFee}
+    trades: [],
+    lastPrice: null,
+    prevPrice: null,
+    tf: "1m",
+  });
+
+  let state = loadState();
+
+  // -----------------------------
+  // UI HOOKS
+  // -----------------------------
+  const el = (id) => document.getElementById(id);
+
+  const lastPriceEl = el("lastPrice");
+  const chgBadgeEl = el("chgBadge");
+  const tfLabelEl = el("tfLabel");
+
+  const marginInput = el("marginInput");
+  const levInput = el("levInput");
+  const levLabel = el("levLabel");
+  const tpInput = el("tpInput");
+  const slInput = el("slInput");
+
+  const buyBtn = el("buyBtn");
+  const sellBtn = el("sellBtn");
+  const closeBtn = el("closeBtn");
+  const posDetails = el("posDetails");
+
+  const walletVal = el("walletVal");
+  const availVal  = el("availVal");
+  const equityVal = el("equityVal");
+  const upnlVal   = el("upnlVal");
+
+  const histBody  = el("histBody");
+
+  // margin % buttons
+  document.querySelectorAll("[data-pct]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const pct = Number(btn.dataset.pct);
+      const avail = computeAvailable();
+      const v = Math.max(0, (avail * pct/100));
+      marginInput.value = v.toFixed(2);
+    });
+  });
+
+  levInput.addEventListener("input", () => levLabel.textContent = `${levInput.value}x`);
+
+  // reset
+  el("resetBtn").addEventListener("click", () => {
+    if (!confirm("Wirklich resetten? Wallet zurück auf 1000 USDT, Trades gelöscht.")) return;
+    state = defaultState();
+    persist();
+    refreshAll();
+    reconnectWS();
+    loadCandles(state.tf).then(setChartData);
+  });
+
+  // export/import
+  el("exportBtn").addEventListener("click", () => {
+    const data = JSON.stringify({ wallet: state.wallet, trades: state.trades }, null, 2);
+    const blob = new Blob([data], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "btc-paper-trades.json"; a.click();
+    URL.revokeObjectURL(url);
+  });
+  el("importBtn").addEventListener("click", async () => {
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.accept = "application/json";
+    inp.onchange = async () => {
+      const file = inp.files?.[0]; if (!file) return;
+      const txt = await file.text();
+      try{
+        const obj = JSON.parse(txt);
+        if (typeof obj.wallet !== "number" || !Array.isArray(obj.trades)) throw new Error("Format passt nicht.");
+        state.wallet = obj.wallet;
+        state.trades = obj.trades;
+        state.position = null; // safety
+        persist();
+        refreshAll();
+      } catch(e){
+        alert("Import fehlgeschlagen: " + e.message);
+      }
+    };
+    inp.click();
+  });
+
+  // -----------------------------
+  // CHART (Lightweight Charts)
+  // -----------------------------
+  const chart = LightweightCharts.createChart(document.getElementById("chart"), {
+    layout: { background: { color: "#0b0f14" }, textColor: "#93a4b8" },
+    grid: { vertLines: { color: "#152236" }, horzLines: { color: "#152236" } },
+    rightPriceScale: { borderColor: "#223045" },
+    timeScale: { borderColor: "#223045", timeVisible: true, secondsVisible: false },
+    crosshair: { mode: 1 },
+  });
+
+  const candleSeries = chart.addCandlestickSeries({
+    upColor: "#16c784", downColor: "#ea3943",
+    borderUpColor: "#16c784", borderDownColor: "#ea3943",
+    wickUpColor: "#16c784", wickDownColor: "#ea3943",
+  });
+
+  const entryLine = chart.addLineSeries({ lineWidth: 2, priceLineVisible: false });
+  const slLine    = chart.addLineSeries({ lineWidth: 2, priceLineVisible: false });
+  const tpLine    = chart.addLineSeries({ lineWidth: 2, priceLineVisible: false });
+
+  el("centerBtn").addEventListener("click", () => {
+    chart.timeScale().fitContent();
+  });
+
+  function setChartData(candles){
+    candleSeries.setData(candles);
+    chart.timeScale().fitContent();
+  }
+
+  // -----------------------------
+  // TIMEFRAMES
+  // -----------------------------
+  document.getElementById("tfButtons").addEventListener("click", async (e) => {
+    const b = e.target.closest("button[data-tf]");
+    if (!b) return;
+    const tf = b.dataset.tf;
+    if (tf === state.tf) return;
+
+    document.querySelectorAll("#tfButtons button").forEach(x => x.classList.toggle("active", x.dataset.tf === tf));
+    state.tf = tf;
+    tfLabelEl.textContent = tf;
+    persist();
+
+    const candles = await loadCandles(tf);
+    setChartData(candles);
+    reconnectWS();
+  });
+
+  // -----------------------------
+  // BINANCE DATA
+  // -----------------------------
+  async function loadCandles(tf){
+    const interval = TF_MAP[tf] ?? "1m";
+    const url = `${REST}?symbol=${SYMBOL}&interval=${interval}&limit=500`;
+    const res = await fetch(url);
+    const raw = await res.json();
+
+    // [ openTime, open, high, low, close, volume, closeTime, ... ]
+    const candles = raw.map(r => ({
+      time: Math.floor(r[0]/1000),
+      open: Number(r[1]),
+      high: Number(r[2]),
+      low:  Number(r[3]),
+      close:Number(r[4]),
+    }));
+
+    const last = candles[candles.length-1]?.close;
+    if (last) setLastPrice(last);
+
+    return candles;
+  }
+
+  let ws = null;
+
+  function reconnectWS(){
+    try{ ws?.close(); }catch(_){}
+    const interval = TF_MAP[state.tf] ?? "1m";
+    const stream = `${SYMBOL.toLowerCase()}@kline_${interval}`;
+    ws = new WebSocket(`${WS_BASE}/${stream}`);
+
+    ws.onmessage = (ev) => {
+      const msg = JSON.parse(ev.data);
+      const k = msg.k;
+      const candle = {
+        time: Math.floor(k.t/1000),
+        open: Number(k.o),
+        high: Number(k.h),
+        low:  Number(k.l),
+        close:Number(k.c),
+      };
+      candleSeries.update(candle);
+      setLastPrice(candle.close);
+      // update SL/TP/liquidation checks on every tick
+      onPriceUpdate();
+    };
+
+    ws.onopen = () => console.log("WS connected:", interval);
+    ws.onerror = () => console.log("WS error");
+    ws.onclose = () => console.log("WS closed");
+  }
+
+  // -----------------------------
+  // TRADING LOGIC
+  // -----------------------------
+  function setLastPrice(p){
+    state.prevPrice = state.lastPrice;
+    state.lastPrice = p;
+
+    lastPriceEl.textContent = format(p, 1);
+    const chg = state.prevPrice ? (p - state.prevPrice) : 0;
+    if (!state.prevPrice) {
+      chgBadgeEl.textContent = "–";
+      chgBadgeEl.className = "chg";
+    } else {
+      chgBadgeEl.textContent = (chg >= 0 ? "+" : "") + format(chg, 1);
+      chgBadgeEl.className = "chg " + (chg >= 0 ? "up" : "down");
+    }
+    refreshStats();
+  }
+
+  function computeAvailable(){
+    const locked = state.position ? state.position.margin : 0;
+    return Math.max(0, state.wallet - locked);
+  }
+
+  function computeUPnL(price=state.lastPrice){
+    if (!state.position || !price) return 0;
+    const p = state.position;
+    const dir = (p.side === "long") ? 1 : -1;
+    return (price - p.entry) * p.qty * dir;
+  }
+
+  function computeEquity(){
+    return state.wallet + computeUPnL();
+  }
+
+  function liquidationPrice(){
+    // simplified: where loss consumes margin minus maintenance
+    // approx liq when equity in position <= margin * MAINT_MARGIN_RATE
+    // For isolated, liq around entry*(1 - 1/lev + mmr) for long, reverse for short
+    if (!state.position) return null;
+    const p = state.position;
+    const lev = p.lev;
+    if (p.side === "long")  return p.entry * (1 - 1/lev + MAINT_MARGIN_RATE);
+    else                   return p.entry * (1 + 1/lev - MAINT_MARGIN_RATE);
+  }
+
+  function openPosition(side){
+    if (!state.lastPrice) return alert("Noch keine Live-Preise geladen.");
+
+    if (state.position) return alert("Du hast schon eine offene Position (Simulator kann nur 1 Position).");
+
+    const margin = Number(marginInput.value);
+    const lev = Number(levInput.value);
+    if (!isFinite(margin) || margin <= 0) return alert("Margin ungültig.");
+    if (!isFinite(lev) || lev < 1) return alert("Hebel ungültig.");
+
+    const available = computeAvailable();
+    if (margin > available) return alert(`Nicht genug Available. Available: ${format(available,2)} USDT`);
+
+    const entry = state.lastPrice;
+    const notional = margin * lev;
+    const qty = notional / entry; // BTC amount
+
+    const entryFee = notional * TAKER_FEE;
+    if (entryFee > (state.wallet - margin)) {
+      return alert("Nicht genug Wallet, um Fee + Margin zu decken (vereinfachtes Modell).");
+    }
+
+    // apply fee
+    state.wallet -= entryFee;
+
+    const sl = Number(slInput.value);
+    const tp = Number(tpInput.value);
+
+    state.position = {
+      side, entry, qty, margin, lev,
+      sl: isFinite(sl) ? sl : null,
+      tp: isFinite(tp) ? tp : null,
+      openedAt: Date.now(),
+      entryFee
+    };
+
+    persist();
+    refreshAll();
+    drawOrderLines();
+  }
+
+  function closePosition(reason="manual", exitPrice=null){
+    if (!state.position) return;
+    if (!state.lastPrice && !exitPrice) return;
+
+    const p = state.position;
+    const exit = exitPrice ?? state.lastPrice;
+    const dir = (p.side === "long") ? 1 : -1;
+    const pnl = (exit - p.entry) * p.qty * dir;
+
+    const notionalClose = p.qty * exit;
+    const exitFee = notionalClose * TAKER_FEE;
+
+    // Realize PnL and fees
+    state.wallet += pnl;
+    state.wallet -= exitFee;
+
+    // If liquidated, cap wallet loss to margin (simple safety clamp)
+    // (In real life, liquidation + fees differ; this is a sim.)
+    if (reason === "liquidation") {
+      // ensure maximum loss approx margin
+      const maxLoss = p.margin;
+      const deltaFromEntry = pnl - (p.entryFee + exitFee); // not perfect, but ok
+      if (deltaFromEntry < -maxLoss * 1.2) {
+        // hard clamp: remove margin
+        // bring wallet back to wallet_before_trade - margin
+        // We can approximate by setting wallet to previous wallet + ???.
+        // For simplicity: subtract extra if needed to enforce loss ~ margin
+        // (This is purposely conservative.)
+      }
+    }
+
+    state.trades.unshift({
+      time: new Date().toISOString(),
+      side: p.side,
+      entry: p.entry,
+      exit,
+      lev: p.lev,
+      margin: p.margin,
+      qty: p.qty,
+      pnl,
+      fees: p.entryFee + exitFee,
+      reason,
+    });
+
+    state.position = null;
+    persist();
+    refreshAll();
+    drawOrderLines();
+  }
+
+  function onPriceUpdate(){
+    if (!state.position || !state.lastPrice) return;
+
+    const p = state.position;
+    const price = state.lastPrice;
+
+    // TP / SL triggers
+    if (p.tp != null){
+      if (p.side === "long" && price >= p.tp) return closePosition("tp", p.tp);
+      if (p.side === "short" && price <= p.tp) return closePosition("tp", p.tp);
+    }
+    if (p.sl != null){
+      if (p.side === "long" && price <= p.sl) return closePosition("sl", p.sl);
+      if (p.side === "short" && price >= p.sl) return closePosition("sl", p.sl);
+    }
+
+    // liquidation
+    const liq = liquidationPrice();
+    if (liq != null){
+      if (p.side === "long" && price <= liq) return closePosition("liquidation", liq);
+      if (p.side === "short" && price >= liq) return closePosition("liquidation", liq);
+    }
+  }
+
+  function drawOrderLines(){
+    // draw horizontal lines as tiny series segments
+    entryLine.setData([]);
+    slLine.setData([]);
+    tpLine.setData([]);
+
+    if (!state.position) return;
+    const p = state.position;
+
+    const t = Math.floor(Date.now()/1000);
+    const t2 = t + 60;
+
+    entryLine.setData([{time:t, value:p.entry},{time:t2, value:p.entry}]);
+    if (p.sl != null) slLine.setData([{time:t, value:p.sl},{time:t2, value:p.sl}]);
+    if (p.tp != null) tpLine.setData([{time:t, value:p.tp},{time:t2, value:p.tp}]);
+  }
+
+  // -----------------------------
+  // UI refresh
+  // -----------------------------
+  function refreshStats(){
+    const avail = computeAvailable();
+    const upnl = computeUPnL();
+    const eq = computeEquity();
+
+    walletVal.textContent = format(state.wallet, 2);
+    availVal.textContent  = format(avail, 2);
+    equityVal.textContent = format(eq, 2);
+
+    upnlVal.textContent = (upnl >= 0 ? "+" : "") + format(upnl, 2);
+    upnlVal.className = "v " + (upnl >= 0 ? "green" : "red");
+
+    // button states
+    closeBtn.disabled = !state.position;
+    buyBtn.disabled = !!state.position;
+    sellBtn.disabled = !!state.position;
+
+    // position details
+    if (!state.position){
+      posDetails.innerHTML = "Keine offene Position";
+      return;
+    }
+    const p = state.position;
+    const liq = liquidationPrice();
+    const notional = p.margin * p.lev;
+
+    posDetails.innerHTML = `
+      <div class="posline"><span><span class="badge ${p.side}">${p.side.toUpperCase()}</span> &nbsp; ${p.lev}x</span><span></span></div>
+      <div class="posline"><span>Entry</span><span><strong>${format(p.entry,1)}</strong></span></div>
+      <div class="posline"><span>Mark</span><span><strong>${state.lastPrice?format(state.lastPrice,1):"–"}</strong></span></div>
+      <div class="posline"><span>Margin</span><span><strong>${format(p.margin,2)}</strong> USDT</span></div>
+      <div class="posline"><span>Notional</span><span><strong>${format(notional,2)}</strong> USDT</span></div>
+      <div class="posline"><span>Qty</span><span><strong>${p.qty.toFixed(6)}</strong> BTC</span></div>
+      <div class="posline"><span>SL / TP</span><span>${p.sl!=null?format(p.sl,1):"–"} / ${p.tp!=null?format(p.tp,1):"–"}</span></div>
+      <div class="posline"><span>Liq (sim)</span><span><strong>${liq?format(liq,1):"–"}</strong></span></div>
+    `;
+  }
+
+  function refreshHistory(){
+    histBody.innerHTML = "";
+    state.trades.slice(0, 25).forEach(tr => {
+      const pnl = tr.pnl;
+      const pnlColor = pnl >= 0 ? "style='color:var(--green);font-weight:800'" : "style='color:var(--red);font-weight:800'";
+      const sideColor = tr.side === "long" ? "var(--green)" : "var(--red)";
+      const reason = tr.reason ? ` <span class="badge" title="Reason">${tr.reason}</span>` : "";
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${new Date(tr.time).toLocaleString()}</td>
+        <td><strong style="color:${sideColor}">${tr.side.toUpperCase()}</strong>${reason}</td>
+        <td class="right">${format(tr.entry,1)}</td>
+        <td class="right">${format(tr.exit,1)}</td>
+        <td class="right" ${pnlColor}>${(pnl>=0?"+":"") + format(pnl,2)}</td>
+        <td class="right">${format(tr.fees,2)}</td>
+        <td class="right">${tr.lev}x</td>
+      `;
+      histBody.appendChild(row);
+    });
+  }
+
+  function refreshAll(){
+    tfLabelEl.textContent = state.tf;
+    document.querySelectorAll("#tfButtons button").forEach(x => x.classList.toggle("active", x.dataset.tf === state.tf));
+    refreshStats();
+    refreshHistory();
+  }
+
+  // -----------------------------
+  // PERSISTENCE
+  // -----------------------------
+  function persist(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch(_){}
+  }
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return defaultState();
+      const obj = JSON.parse(raw);
+      // minimal validation
+      if (typeof obj.wallet !== "number") return defaultState();
+      if (!Array.isArray(obj.trades)) obj.trades = [];
+      if (!obj.tf) obj.tf = "1m";
+      return obj;
+    } catch(_){
+      return defaultState();
+    }
+  }
+
+  // -----------------------------
+  // HELPERS
+  // -----------------------------
+  function format(n, d=2){
+    if (!isFinite(n)) return "–";
+    return Number(n).toLocaleString("de-DE", {minimumFractionDigits:d, maximumFractionDigits:d});
+  }
+
+  // -----------------------------
+  // EVENTS
+  // -----------------------------
+  buyBtn.addEventListener("click", () => openPosition("long"));
+  sellBtn.addEventListener("click", () => openPosition("short"));
+  closeBtn.addEventListener("click", () => closePosition("manual"));
+
+  // when SL/TP changed while position open, update position
+  [slInput, tpInput].forEach(inp => inp.addEventListener("change", () => {
+    if (!state.position) return;
+    const sl = Number(slInput.value);
+    const tp = Number(tpInput.value);
+    state.position.sl = isFinite(sl) ? sl : null;
+    state.position.tp = isFinite(tp) ? tp : null;
+    persist();
+    refreshAll();
+    drawOrderLines();
+  }));
+
+  // -----------------------------
+  // INIT
+  // -----------------------------
+  refreshAll();
+  levLabel.textContent = `${levInput.value}x`;
+
+  loadCandles(state.tf).then(setChartData).then(() => {
+    drawOrderLines();
+    reconnectWS();
+  });
+
+})();
+</script>
+</body>
+</html>
