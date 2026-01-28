@@ -3,22 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>BTC Paper Trading Simulator</title>
+  <title>BTC Perp Paper Trading Simulator</title>
   <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
   <style>
     :root{
       --bg:#0b0f14; --panel:#111823; --panel2:#0f1620; --text:#e6edf3; --muted:#93a4b8;
-      --green:#16c784; --red:#ea3943; --blue:#2f81f7; --line:#223045; --accent:#f2c94c;
+      --green:#16c784; --red:#ea3943; --blue:#2f81f7; --line:#223045; --amber:#f2c94c;
       --radius:14px;
     }
     *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial}
     body{margin:0;background:var(--bg);color:var(--text)}
-    .wrap{max-width:1280px;margin:0 auto;padding:14px;display:grid;grid-template-columns: 1.4fr 1fr;gap:14px}
+    .wrap{max-width:1500px;margin:0 auto;padding:14px;display:grid;grid-template-columns: 1.45fr 1fr;gap:14px}
     .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
-    .card h3{margin:0;padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px;color:var(--muted);font-weight:600;letter-spacing:.3px}
+    .card h3{margin:0;padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px;color:var(--muted);font-weight:700;letter-spacing:.3px}
     .topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
     .pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:#0c131c;color:var(--muted);font-size:12px}
-    .price{font-size:18px;font-weight:700}
+    .price{font-size:18px;font-weight:800}
     .chg{font-size:12px;padding:4px 8px;border-radius:999px}
     .chg.up{background:rgba(22,199,132,.15);color:var(--green);border:1px solid rgba(22,199,132,.35)}
     .chg.down{background:rgba(234,57,67,.15);color:var(--red);border:1px solid rgba(234,57,67,.35)}
@@ -28,7 +28,7 @@
       cursor:pointer;font-size:12px
     }
     .tf button.active{color:var(--text);border-color:rgba(47,129,247,.6);box-shadow:0 0 0 2px rgba(47,129,247,.12) inset}
-    #chart{height:520px}
+    #chart{height:560px}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 14px}
     label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
     input,select{
@@ -38,7 +38,7 @@
     input:focus,select:focus{border-color:rgba(47,129,247,.7);box-shadow:0 0 0 3px rgba(47,129,247,.12)}
     .btnrow{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 14px}
     .btn{
-      padding:12px 12px;border-radius:14px;border:1px solid transparent;cursor:pointer;font-weight:800;letter-spacing:.2px
+      padding:12px 12px;border-radius:14px;border:1px solid transparent;cursor:pointer;font-weight:900;letter-spacing:.2px
     }
     .buy{background:rgba(22,199,132,.18);border-color:rgba(22,199,132,.35);color:var(--green)}
     .sell{background:rgba(234,57,67,.18);border-color:rgba(234,57,67,.35);color:var(--red)}
@@ -48,25 +48,32 @@
     }
     .stat{background:#0c131c;border:1px solid var(--line);border-radius:12px;padding:10px}
     .stat .k{font-size:11px;color:var(--muted)}
-    .stat .v{font-size:14px;font-weight:800;margin-top:4px}
-    .v.green{color:var(--green)} .v.red{color:var(--red)}
-    .posbox{padding:12px 14px;border-top:1px solid var(--line)}
-    .posline{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed rgba(34,48,69,.6)}
-    .posline:last-child{border-bottom:none}
+    .stat .v{font-size:14px;font-weight:900;margin-top:4px}
+    .v.green{color:var(--green)} .v.red{color:var(--red)} .v.amber{color:var(--amber)}
     .badge{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
     .badge.long{color:var(--green);border-color:rgba(22,199,132,.35);background:rgba(22,199,132,.12)}
     .badge.short{color:var(--red);border-color:rgba(234,57,67,.35);background:rgba(234,57,67,.12)}
+    .badge.cross{color:var(--amber);border-color:rgba(242,201,76,.35);background:rgba(242,201,76,.10)}
+    .badge.iso{color:var(--blue);border-color:rgba(47,129,247,.35);background:rgba(47,129,247,.10)}
     .smallbtn{padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:#0c131c;color:var(--muted);cursor:pointer;font-size:12px}
     .smallbtn:hover{border-color:rgba(47,129,247,.55);color:var(--text)}
-    .history{padding:0 14px 14px}
+    .section{padding:12px 14px;border-top:1px solid var(--line)}
     table{width:100%;border-collapse:collapse;font-size:12px}
-    th,td{padding:10px 8px;border-bottom:1px solid rgba(34,48,69,.7);text-align:left;color:var(--muted)}
-    th{color:#b6c2d1;font-weight:700}
+    th,td{padding:9px 8px;border-bottom:1px solid rgba(34,48,69,.7);text-align:left;color:var(--muted)}
+    th{color:#b6c2d1;font-weight:800}
     td strong{color:var(--text)}
     .right{text-align:right}
+    .split3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .split2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .tiny{font-size:11px;color:var(--muted);line-height:1.35}
+    .bookWrap{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .bookCard{background:#0c131c;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+    .bookCard h4{margin:0;padding:10px 10px;border-bottom:1px solid rgba(34,48,69,.7);font-size:12px;color:#b6c2d1}
+    .bookCard .inner{padding:0 10px 10px}
+    .muterow{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px dashed rgba(34,48,69,.55)}
+    .muterow:last-child{border-bottom:none}
     .warn{padding:10px 14px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;line-height:1.35}
-    .footerBtns{display:flex;gap:10px;flex-wrap:wrap;padding:12px 14px;border-top:1px solid var(--line)}
-    @media(max-width:1000px){.wrap{grid-template-columns:1fr}.card{order:unset} #chart{height:420px}}
+    @media(max-width:1100px){.wrap{grid-template-columns:1fr} #chart{height:430px}}
   </style>
 </head>
 
@@ -76,10 +83,10 @@
     <!-- CHART -->
     <section class="card">
       <div class="topbar">
-        <span class="pill">USDT-M (sim)</span>
+        <span class="pill"><strong>USDT-M Perp</strong> (sim)</span>
         <span class="pill"><strong>BTC/USDT</strong></span>
         <span id="tfLabel" class="pill">1m</span>
-        <span class="pill">Quelle: Binance</span>
+        <span class="pill">Quelle: Binance Futures</span>
         <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
           <div class="price" id="lastPrice">–</div>
           <div class="chg" id="chgBadge">–</div>
@@ -96,7 +103,10 @@
           <button data-tf="1d">1d</button>
         </div>
 
-        <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
+        <div style="margin-left:auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span class="pill">Mark: <strong id="markPrice">–</strong></span>
+          <span class="pill">Funding: <strong id="fundingRate">–</strong></span>
+          <span class="pill">Countdown: <strong id="fundingCountdown">–</strong></span>
           <button class="smallbtn" id="centerBtn">Center</button>
           <button class="smallbtn" id="resetBtn">Reset</button>
         </div>
@@ -105,7 +115,8 @@
       <div id="chart"></div>
 
       <div class="warn">
-        Simulator: Fees sind drin (Taker 0,04% pro Ausführung). Liquidation ist vereinfacht (Maintenance Margin). Kein echtes Trading.
+        Simulator: Fees (Taker 0,04% / Maker 0,02%) + Funding live (wie Perp). Liquidation ist vereinfacht.
+        Cross: Account-Liquidation wenn Equity &lt; Maintenance Sum (sim). Isolated: Positions-Liq.
       </div>
     </section>
 
@@ -114,6 +125,45 @@
       <h3>Handeln</h3>
 
       <div class="grid">
+        <div>
+          <label>Mode</label>
+          <select id="marginMode">
+            <option value="isolated" selected>Isolated</option>
+            <option value="cross">Cross</option>
+          </select>
+          <div class="tiny" style="margin-top:6px">
+            Hedge Mode erlaubt Long & Short gleichzeitig.
+          </div>
+        </div>
+
+        <div>
+          <label>Hedge Mode</label>
+          <select id="hedgeMode">
+            <option value="off" selected>Off (nur 1 Position)</option>
+            <option value="on">On (Long & Short parallel)</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Order Type</label>
+          <select id="orderType">
+            <option value="market" selected>Market</option>
+            <option value="limit">Limit</option>
+            <option value="stop_market">Stop-Market</option>
+            <option value="stop_limit">Stop-Limit</option>
+          </select>
+        </div>
+
+        <div>
+          <label>Hebel</label>
+          <input id="levInput" type="range" min="1" max="125" value="20" />
+          <div style="display:flex;justify-content:space-between;margin-top:6px;color:var(--muted);font-size:12px">
+            <span>1x</span>
+            <span><strong id="levLabel" style="color:var(--text)">20x</strong></span>
+            <span>125x</span>
+          </div>
+        </div>
+
         <div>
           <label>Margin (USDT)</label>
           <input id="marginInput" type="number" min="1" step="0.01" value="25" />
@@ -126,13 +176,13 @@
         </div>
 
         <div>
-          <label>Hebel</label>
-          <input id="levInput" type="range" min="1" max="125" value="20" />
-          <div style="display:flex;justify-content:space-between;margin-top:6px;color:var(--muted);font-size:12px">
-            <span>1x</span>
-            <span><strong id="levLabel" style="color:var(--text)">20x</strong></span>
-            <span>125x</span>
-          </div>
+          <label>Limit-Preis (nur Limit / Stop-Limit)</label>
+          <input id="limitPrice" type="number" step="0.1" placeholder="z.B. 88950" />
+        </div>
+
+        <div>
+          <label>Stop-Preis (nur Stop-Market / Stop-Limit)</label>
+          <input id="stopPrice" type="number" step="0.1" placeholder="z.B. 89100" />
         </div>
 
         <div>
@@ -147,8 +197,8 @@
       </div>
 
       <div class="btnrow">
-        <button class="btn buy" id="buyBtn">Kaufen / Long</button>
-        <button class="btn sell" id="sellBtn">Verkaufen / Short</button>
+        <button class="btn buy" id="buyBtn">Long</button>
+        <button class="btn sell" id="sellBtn">Short</button>
       </div>
 
       <div class="mini">
@@ -168,39 +218,75 @@
           <div class="k">Unrealized PnL</div>
           <div class="v" id="upnlVal">–</div>
         </div>
+        <div class="stat">
+          <div class="k">Funding PnL (cum.)</div>
+          <div class="v amber" id="fundingPnlVal">–</div>
+        </div>
+        <div class="stat">
+          <div class="k">Orders (open)</div>
+          <div class="v" id="openOrdersVal">–</div>
+        </div>
       </div>
 
-      <div class="posbox">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="color:var(--muted);font-size:12px;font-weight:700">Offene Position</div>
-          <div style="display:flex;gap:10px;align-items:center">
-            <button class="smallbtn" id="closeBtn" disabled>Position schließen (Market)</button>
+      <div class="section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="color:var(--muted);font-size:12px;font-weight:900">Offene Positionen</div>
+          <button class="smallbtn" id="closeAllBtn">Close All (Market)</button>
+        </div>
+
+        <div id="positionsWrap" class="tiny">Keine offenen Positionen</div>
+      </div>
+
+      <div class="section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="color:var(--muted);font-size:12px;font-weight:900">Open Orders</div>
+          <button class="smallbtn" id="cancelAllBtn">Cancel All</button>
+        </div>
+        <div id="ordersWrap" class="tiny">Keine offenen Orders</div>
+      </div>
+
+      <div class="section">
+        <div class="bookWrap">
+          <div class="bookCard">
+            <h4>Orderbook (Top 20)</h4>
+            <div class="inner">
+              <div class="split2">
+                <div>
+                  <div class="tiny" style="margin:8px 0 6px;color:#b6c2d1;font-weight:800">Bids</div>
+                  <div id="bids"></div>
+                </div>
+                <div>
+                  <div class="tiny" style="margin:8px 0 6px;color:#b6c2d1;font-weight:800">Asks</div>
+                  <div id="asks"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bookCard">
+            <h4>Trades Tape (live)</h4>
+            <div class="inner">
+              <div id="tape"></div>
+            </div>
           </div>
         </div>
-        <div id="posDetails" style="color:var(--muted);font-size:12px">Keine offene Position</div>
       </div>
 
-      <h3 style="border-top:1px solid var(--line)">Verlauf</h3>
-      <div class="history">
+      <h3 style="border-top:1px solid var(--line)">Verlauf (letzte 30)</h3>
+      <div class="section" style="padding-top:0">
         <table>
           <thead>
             <tr>
               <th>Zeit</th>
-              <th>Side</th>
-              <th class="right">Entry</th>
-              <th class="right">Exit</th>
+              <th>Aktion</th>
+              <th class="right">Preis</th>
               <th class="right">PnL</th>
               <th class="right">Fees</th>
-              <th class="right">Leverage</th>
+              <th class="right">Reason</th>
             </tr>
           </thead>
           <tbody id="histBody"></tbody>
         </table>
-      </div>
-
-      <div class="footerBtns">
-        <button class="smallbtn" id="exportBtn">Export Trades (JSON)</button>
-        <button class="smallbtn" id="importBtn">Import Trades (JSON)</button>
       </div>
     </section>
   </div>
@@ -208,14 +294,19 @@
 <script>
 (() => {
   // -----------------------------
-  // CONFIG
+  // CONFIG (Binance Futures USDT-M)
   // -----------------------------
   const SYMBOL = "BTCUSDT";
-  const REST = "https://api.binance.com/api/v3/klines";
-  const WS_BASE = "wss://stream.binance.com:9443/ws";
-  const TAKER_FEE = 0.0004;              // 0.04% per execution
-  const MAINT_MARGIN_RATE = 0.004;       // simplified maintenance margin (0.4%)
-  const STORAGE_KEY = "btc_paper_sim_v1";
+  const REST_FAPI = "https://fapi.binance.com";
+  const WS_BASE = "wss://fstream.binance.com/stream?streams=";
+
+  const MAKER_FEE = 0.0002; // 0.02%
+  const TAKER_FEE = 0.0004; // 0.04%
+
+  // Maintenance margin (sim). In echt abhängig von Notional/Bracket.
+  const MAINT_MARGIN_RATE = 0.004; // 0.4%
+
+  const STORAGE_KEY = "btc_perp_paper_sim_v2";
 
   const TF_MAP = { "1m":"1m", "5m":"5m", "15m":"15m", "1h":"1h", "4h":"4h", "1d":"1d" };
 
@@ -224,41 +315,62 @@
   // -----------------------------
   const defaultState = () => ({
     wallet: 1000.0,
-    position: null, // {side, entry, qty, margin, lev, sl, tp, openedAt, entryFee}
+    fundingPnl: 0.0,
+    positions: [], // [{id, side, mode, entry, qty, margin, lev, sl, tp, entryFee, openedAt}]
+    orders: [],    // [{id, side, mode, type, margin, lev, limitPrice, stopPrice, sl, tp, createdAt, activated}]
     trades: [],
+    tf: "1m",
     lastPrice: null,
     prevPrice: null,
-    tf: "1m",
+    markPrice: null,
+    lastFundingRate: null,
+    nextFundingTime: null,
   });
 
   let state = loadState();
 
   // -----------------------------
-  // UI HOOKS
+  // UI
   // -----------------------------
   const el = (id) => document.getElementById(id);
 
   const lastPriceEl = el("lastPrice");
-  const chgBadgeEl = el("chgBadge");
-  const tfLabelEl = el("tfLabel");
+  const chgBadgeEl  = el("chgBadge");
+  const tfLabelEl   = el("tfLabel");
 
-  const marginInput = el("marginInput");
-  const levInput = el("levInput");
-  const levLabel = el("levLabel");
-  const tpInput = el("tpInput");
-  const slInput = el("slInput");
+  const markPriceEl = el("markPrice");
+  const fundingRateEl = el("fundingRate");
+  const fundingCountdownEl = el("fundingCountdown");
 
-  const buyBtn = el("buyBtn");
+  const marginModeSel = el("marginMode");
+  const hedgeModeSel  = el("hedgeMode");
+
+  const orderTypeSel = el("orderType");
+  const marginInput  = el("marginInput");
+  const levInput     = el("levInput");
+  const levLabel     = el("levLabel");
+  const limitPriceIn = el("limitPrice");
+  const stopPriceIn  = el("stopPrice");
+  const tpInput      = el("tpInput");
+  const slInput      = el("slInput");
+
+  const buyBtn  = el("buyBtn");
   const sellBtn = el("sellBtn");
-  const closeBtn = el("closeBtn");
-  const posDetails = el("posDetails");
 
   const walletVal = el("walletVal");
   const availVal  = el("availVal");
   const equityVal = el("equityVal");
   const upnlVal   = el("upnlVal");
+  const fundingPnlVal = el("fundingPnlVal");
+  const openOrdersVal = el("openOrdersVal");
 
-  const histBody  = el("histBody");
+  const positionsWrap = el("positionsWrap");
+  const ordersWrap    = el("ordersWrap");
+  const histBody      = el("histBody");
+
+  const bidsDiv = el("bids");
+  const asksDiv = el("asks");
+  const tapeDiv = el("tape");
 
   // margin % buttons
   document.querySelectorAll("[data-pct]").forEach(btn => {
@@ -272,9 +384,10 @@
 
   levInput.addEventListener("input", () => levLabel.textContent = `${levInput.value}x`);
 
-  // reset
+  el("centerBtn").addEventListener("click", () => chart.timeScale().fitContent());
+
   el("resetBtn").addEventListener("click", () => {
-    if (!confirm("Wirklich resetten? Wallet zurück auf 1000 USDT, Trades gelöscht.")) return;
+    if (!confirm("Wirklich resetten? Wallet zurück auf 1000 USDT, alles gelöscht.")) return;
     state = defaultState();
     persist();
     refreshAll();
@@ -282,38 +395,11 @@
     loadCandles(state.tf).then(setChartData);
   });
 
-  // export/import
-  el("exportBtn").addEventListener("click", () => {
-    const data = JSON.stringify({ wallet: state.wallet, trades: state.trades }, null, 2);
-    const blob = new Blob([data], {type:"application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "btc-paper-trades.json"; a.click();
-    URL.revokeObjectURL(url);
-  });
-  el("importBtn").addEventListener("click", async () => {
-    const inp = document.createElement("input");
-    inp.type = "file"; inp.accept = "application/json";
-    inp.onchange = async () => {
-      const file = inp.files?.[0]; if (!file) return;
-      const txt = await file.text();
-      try{
-        const obj = JSON.parse(txt);
-        if (typeof obj.wallet !== "number" || !Array.isArray(obj.trades)) throw new Error("Format passt nicht.");
-        state.wallet = obj.wallet;
-        state.trades = obj.trades;
-        state.position = null; // safety
-        persist();
-        refreshAll();
-      } catch(e){
-        alert("Import fehlgeschlagen: " + e.message);
-      }
-    };
-    inp.click();
-  });
+  el("closeAllBtn").addEventListener("click", () => closeAllPositionsMarket());
+  el("cancelAllBtn").addEventListener("click", () => { state.orders = []; persist(); refreshAll(); });
 
   // -----------------------------
-  // CHART (Lightweight Charts)
+  // CHART
   // -----------------------------
   const chart = LightweightCharts.createChart(document.getElementById("chart"), {
     layout: { background: { color: "#0b0f14" }, textColor: "#93a4b8" },
@@ -329,17 +415,57 @@
     wickUpColor: "#16c784", wickDownColor: "#ea3943",
   });
 
-  const entryLine = chart.addLineSeries({ lineWidth: 2, priceLineVisible: false });
-  const slLine    = chart.addLineSeries({ lineWidth: 2, priceLineVisible: false });
-  const tpLine    = chart.addLineSeries({ lineWidth: 2, priceLineVisible: false });
+  // Overlays (price lines) – we manage per position id
+  const overlayLines = new Map(); // posId -> {entry, sl, tp}
+  function clearOverlays(){
+    for (const v of overlayLines.values()){
+      try{ candleSeries.removePriceLine(v.entry); }catch(_){}
+      try{ if(v.sl) candleSeries.removePriceLine(v.sl); }catch(_){}
+      try{ if(v.tp) candleSeries.removePriceLine(v.tp); }catch(_){}
+    }
+    overlayLines.clear();
+  }
 
-  el("centerBtn").addEventListener("click", () => {
-    chart.timeScale().fitContent();
-  });
+  function rebuildOverlays(){
+    clearOverlays();
+    // show first two positions (avoid clutter)
+    const show = state.positions.slice(0, 2);
+    for (const p of show){
+      const prefix = p.side.toUpperCase() + (p.mode === "cross" ? " CROSS" : " ISO");
+      const entry = candleSeries.createPriceLine({
+        price: p.entry,
+        color: p.side === "long" ? "#16c784" : "#ea3943",
+        lineWidth: 2,
+        lineStyle: 0,
+        axisLabelVisible: true,
+        title: `${prefix} Entry`,
+      });
+      const sl = (p.sl != null) ? candleSeries.createPriceLine({
+        price: p.sl,
+        color: "#2f81f7",
+        lineWidth: 2,
+        lineStyle: 2,
+        axisLabelVisible: true,
+        title: `${prefix} SL`,
+      }) : null;
+
+      const tp = (p.tp != null) ? candleSeries.createPriceLine({
+        price: p.tp,
+        color: "#f2c94c",
+        lineWidth: 2,
+        lineStyle: 2,
+        axisLabelVisible: true,
+        title: `${prefix} TP`,
+      }) : null;
+
+      overlayLines.set(p.id, {entry, sl, tp});
+    }
+  }
 
   function setChartData(candles){
     candleSeries.setData(candles);
     chart.timeScale().fitContent();
+    rebuildOverlays();
   }
 
   // -----------------------------
@@ -362,15 +488,14 @@
   });
 
   // -----------------------------
-  // BINANCE DATA
+  // DATA (Futures REST)
   // -----------------------------
   async function loadCandles(tf){
     const interval = TF_MAP[tf] ?? "1m";
-    const url = `${REST}?symbol=${SYMBOL}&interval=${interval}&limit=500`;
+    const url = `${REST_FAPI}/fapi/v1/klines?symbol=${SYMBOL}&interval=${interval}&limit=500`;
     const res = await fetch(url);
     const raw = await res.json();
 
-    // [ openTime, open, high, low, close, volume, closeTime, ... ]
     const candles = raw.map(r => ({
       time: Math.floor(r[0]/1000),
       open: Number(r[1]),
@@ -385,271 +510,639 @@
     return candles;
   }
 
+  async function fetchPremiumIndex(){
+    // has markPrice, lastFundingRate, nextFundingTime
+    const res = await fetch(`${REST_FAPI}/fapi/v1/premiumIndex?symbol=${SYMBOL}`);
+    const j = await res.json();
+    state.markPrice = Number(j.markPrice);
+    state.lastFundingRate = Number(j.lastFundingRate);
+    state.nextFundingTime = Number(j.nextFundingTime);
+    persist();
+    refreshFundingHeader();
+  }
+
+  function refreshFundingHeader(){
+    markPriceEl.textContent = isFinite(state.markPrice) ? fmt(state.markPrice, 1) : "–";
+    fundingRateEl.textContent = isFinite(state.lastFundingRate) ? (state.lastFundingRate*100).toFixed(4) + "%" : "–";
+  }
+
+  // -----------------------------
+  // LIVE STREAMS (kline + depth + aggTrade)
+  // -----------------------------
   let ws = null;
+  let bids = []; // [{p,q}]
+  let asks = [];
+  let tape = []; // last trades
 
   function reconnectWS(){
     try{ ws?.close(); }catch(_){}
     const interval = TF_MAP[state.tf] ?? "1m";
-    const stream = `${SYMBOL.toLowerCase()}@kline_${interval}`;
-    ws = new WebSocket(`${WS_BASE}/${stream}`);
+    const streams = [
+      `${SYMBOL.toLowerCase()}@kline_${interval}`,
+      `${SYMBOL.toLowerCase()}@depth20@100ms`,
+      `${SYMBOL.toLowerCase()}@aggTrade`,
+      `${SYMBOL.toLowerCase()}@markPrice@1s`, // mark + funding sometimes included; we'll use mark price from this too
+    ].join("/");
+
+    ws = new WebSocket(WS_BASE + streams);
 
     ws.onmessage = (ev) => {
       const msg = JSON.parse(ev.data);
-      const k = msg.k;
-      const candle = {
-        time: Math.floor(k.t/1000),
-        open: Number(k.o),
-        high: Number(k.h),
-        low:  Number(k.l),
-        close:Number(k.c),
-      };
-      candleSeries.update(candle);
-      setLastPrice(candle.close);
-      // update SL/TP/liquidation checks on every tick
-      onPriceUpdate();
+      const s = msg.stream;
+      const d = msg.data;
+
+      if (s.includes("@kline_")){
+        const k = d.k;
+        const candle = {
+          time: Math.floor(k.t/1000),
+          open: Number(k.o),
+          high: Number(k.h),
+          low:  Number(k.l),
+          close:Number(k.c),
+        };
+        candleSeries.update(candle);
+        setLastPrice(candle.close);
+        onTick();
+      }
+
+      if (s.includes("@depth20")){
+        // bids/asks arrays: [price, qty]
+        bids = (d.b || []).map(x => ({p:Number(x[0]), q:Number(x[1])}));
+        asks = (d.a || []).map(x => ({p:Number(x[0]), q:Number(x[1])}));
+        renderOrderbook();
+      }
+
+      if (s.includes("@aggTrade")){
+        const price = Number(d.p);
+        const qty = Number(d.q);
+        const isBuyerMaker = !!d.m; // true => sell-initiated
+        tape.unshift({
+          t: d.T,
+          p: price,
+          q: qty,
+          side: isBuyerMaker ? "sell" : "buy",
+        });
+        tape = tape.slice(0, 30);
+        renderTape();
+      }
+
+      if (s.includes("@markPrice")){
+        // mark price stream
+        if (d && d.p){
+          state.markPrice = Number(d.p);
+          markPriceEl.textContent = fmt(state.markPrice, 1);
+        }
+        if (d && d.r){
+          state.lastFundingRate = Number(d.r);
+          fundingRateEl.textContent = (state.lastFundingRate*100).toFixed(4) + "%";
+        }
+        if (d && d.T){
+          state.nextFundingTime = Number(d.T);
+        }
+      }
     };
 
     ws.onopen = () => console.log("WS connected:", interval);
-    ws.onerror = () => console.log("WS error");
     ws.onclose = () => console.log("WS closed");
+    ws.onerror = () => console.log("WS error");
+  }
+
+  function renderOrderbook(){
+    const fmtRow = (x, isBid) => `
+      <div class="muterow">
+        <span style="color:${isBid ? "var(--green)" : "var(--red)"};font-weight:800">${fmt(x.p, 1)}</span>
+        <span>${x.q.toFixed(3)}</span>
+      </div>`;
+    bidsDiv.innerHTML = bids.slice(0, 20).map(x => fmtRow(x, true)).join("");
+    asksDiv.innerHTML = asks.slice(0, 20).map(x => fmtRow(x, false)).join("");
+  }
+
+  function renderTape(){
+    const rows = tape.map(t => {
+      const c = t.side === "buy" ? "var(--green)" : "var(--red)";
+      return `
+        <div class="muterow">
+          <span style="color:${c};font-weight:900">${fmt(t.p,1)}</span>
+          <span>${t.q.toFixed(4)}</span>
+          <span class="tiny">${new Date(t.t).toLocaleTimeString()}</span>
+        </div>
+      `;
+    }).join("");
+    tapeDiv.innerHTML = rows || `<div class="tiny">Warte auf Trades…</div>`;
   }
 
   // -----------------------------
-  // TRADING LOGIC
+  // PRICE / FUNDING TIMER
   // -----------------------------
   function setLastPrice(p){
     state.prevPrice = state.lastPrice;
     state.lastPrice = p;
 
-    lastPriceEl.textContent = format(p, 1);
+    lastPriceEl.textContent = fmt(p, 1);
     const chg = state.prevPrice ? (p - state.prevPrice) : 0;
+
     if (!state.prevPrice) {
       chgBadgeEl.textContent = "–";
       chgBadgeEl.className = "chg";
     } else {
-      chgBadgeEl.textContent = (chg >= 0 ? "+" : "") + format(chg, 1);
+      chgBadgeEl.textContent = (chg >= 0 ? "+" : "") + fmt(chg, 1);
       chgBadgeEl.className = "chg " + (chg >= 0 ? "up" : "down");
     }
+
     refreshStats();
   }
 
-  function computeAvailable(){
-    const locked = state.position ? state.position.margin : 0;
-    return Math.max(0, state.wallet - locked);
-  }
-
-  function computeUPnL(price=state.lastPrice){
-    if (!state.position || !price) return 0;
-    const p = state.position;
-    const dir = (p.side === "long") ? 1 : -1;
-    return (price - p.entry) * p.qty * dir;
-  }
-
-  function computeEquity(){
-    return state.wallet + computeUPnL();
-  }
-
-  function liquidationPrice(){
-    // simplified: where loss consumes margin minus maintenance
-    // approx liq when equity in position <= margin * MAINT_MARGIN_RATE
-    // For isolated, liq around entry*(1 - 1/lev + mmr) for long, reverse for short
-    if (!state.position) return null;
-    const p = state.position;
-    const lev = p.lev;
-    if (p.side === "long")  return p.entry * (1 - 1/lev + MAINT_MARGIN_RATE);
-    else                   return p.entry * (1 + 1/lev - MAINT_MARGIN_RATE);
-  }
-
-  function openPosition(side){
-    if (!state.lastPrice) return alert("Noch keine Live-Preise geladen.");
-
-    if (state.position) return alert("Du hast schon eine offene Position (Simulator kann nur 1 Position).");
-
-    const margin = Number(marginInput.value);
-    const lev = Number(levInput.value);
-    if (!isFinite(margin) || margin <= 0) return alert("Margin ungültig.");
-    if (!isFinite(lev) || lev < 1) return alert("Hebel ungültig.");
-
-    const available = computeAvailable();
-    if (margin > available) return alert(`Nicht genug Available. Available: ${format(available,2)} USDT`);
-
-    const entry = state.lastPrice;
-    const notional = margin * lev;
-    const qty = notional / entry; // BTC amount
-
-    const entryFee = notional * TAKER_FEE;
-    if (entryFee > (state.wallet - margin)) {
-      return alert("Nicht genug Wallet, um Fee + Margin zu decken (vereinfachtes Modell).");
+  function updateFundingCountdown(){
+    if (!state.nextFundingTime) {
+      fundingCountdownEl.textContent = "–";
+      return;
     }
-
-    // apply fee
-    state.wallet -= entryFee;
-
-    const sl = Number(slInput.value);
-    const tp = Number(tpInput.value);
-
-    state.position = {
-      side, entry, qty, margin, lev,
-      sl: isFinite(sl) ? sl : null,
-      tp: isFinite(tp) ? tp : null,
-      openedAt: Date.now(),
-      entryFee
-    };
-
-    persist();
-    refreshAll();
-    drawOrderLines();
+    const now = Date.now();
+    const ms = Math.max(0, state.nextFundingTime - now);
+    const h = Math.floor(ms/3600000);
+    const m = Math.floor((ms%3600000)/60000);
+    const s = Math.floor((ms%60000)/1000);
+    fundingCountdownEl.textContent = `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
   }
 
-  function closePosition(reason="manual", exitPrice=null){
-    if (!state.position) return;
-    if (!state.lastPrice && !exitPrice) return;
+  // Apply funding when time passed
+  function maybeApplyFunding(){
+    if (!state.nextFundingTime || !isFinite(state.lastFundingRate) || !isFinite(state.markPrice)) return;
+    const now = Date.now();
+    if (now < state.nextFundingTime) return;
 
-    const p = state.position;
-    const exit = exitPrice ?? state.lastPrice;
-    const dir = (p.side === "long") ? 1 : -1;
-    const pnl = (exit - p.entry) * p.qty * dir;
+    // Funding payment per position: payment = notional * fundingRate
+    // If fundingRate > 0: longs pay shorts
+    const rate = state.lastFundingRate;
+    let totalPayment = 0;
 
-    const notionalClose = p.qty * exit;
-    const exitFee = notionalClose * TAKER_FEE;
+    for (const p of state.positions){
+      const notional = p.qty * state.markPrice;
+      const payment = notional * rate;
 
-    // Realize PnL and fees
-    state.wallet += pnl;
-    state.wallet -= exitFee;
+      // long pays if rate>0, receives if rate<0; short opposite
+      let signed = 0;
+      if (p.side === "long") signed = -payment;
+      else signed = +payment;
 
-    // If liquidated, cap wallet loss to margin (simple safety clamp)
-    // (In real life, liquidation + fees differ; this is a sim.)
-    if (reason === "liquidation") {
-      // ensure maximum loss approx margin
-      const maxLoss = p.margin;
-      const deltaFromEntry = pnl - (p.entryFee + exitFee); // not perfect, but ok
-      if (deltaFromEntry < -maxLoss * 1.2) {
-        // hard clamp: remove margin
-        // bring wallet back to wallet_before_trade - margin
-        // We can approximate by setting wallet to previous wallet + ???.
-        // For simplicity: subtract extra if needed to enforce loss ~ margin
-        // (This is purposely conservative.)
-      }
+      // If rate is negative, sign flips naturally because payment negative.
+      // Example: rate=-0.01 => payment negative; long: -(-) = + receives; short: +(-)= - pays.
+      state.wallet += signed;
+      state.fundingPnl += signed;
+      totalPayment += signed;
     }
 
     state.trades.unshift({
       time: new Date().toISOString(),
-      side: p.side,
-      entry: p.entry,
-      exit,
-      lev: p.lev,
-      margin: p.margin,
-      qty: p.qty,
-      pnl,
-      fees: p.entryFee + exitFee,
+      action: "FUNDING",
+      price: state.markPrice,
+      pnl: totalPayment,
+      fees: 0,
+      reason: `rate ${(rate*100).toFixed(4)}%`,
+    });
+
+    // Fetch next funding schedule fresh
+    fetchPremiumIndex().catch(()=>{});
+    persist();
+    refreshAll();
+  }
+
+  setInterval(() => {
+    updateFundingCountdown();
+    maybeApplyFunding();
+  }, 250);
+
+  // -----------------------------
+  // TRADING ENGINE
+  // -----------------------------
+  function uid(prefix="id"){
+    return prefix + "_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
+  }
+
+  function computeAvailable(){
+    // In isolated: lock margin per position. In cross: we still "reserve" margin for usability (sim),
+    // but cross shares equity for liquidation.
+    const locked = state.positions.reduce((s,p)=> s + (p.mode==="isolated" ? p.margin : 0), 0);
+    const orderLocked = state.orders.reduce((s,o)=> s + (o.mode==="isolated" ? o.margin : 0), 0);
+    return Math.max(0, state.wallet - locked - orderLocked);
+  }
+
+  function posUPnL(p, price=state.markPrice ?? state.lastPrice){
+    if (!price) return 0;
+    const dir = (p.side === "long") ? 1 : -1;
+    return (price - p.entry) * p.qty * dir;
+  }
+
+  function totalUPnL(){
+    const px = state.markPrice ?? state.lastPrice;
+    return state.positions.reduce((s,p)=> s + posUPnL(p, px), 0);
+  }
+
+  function computeEquity(){
+    return state.wallet + totalUPnL();
+  }
+
+  function maintMarginSum(){
+    const px = state.markPrice ?? state.lastPrice;
+    if (!px) return 0;
+    return state.positions.reduce((s,p)=> s + (p.qty * px * MAINT_MARGIN_RATE), 0);
+  }
+
+  function isolatedLiquidationPrice(p){
+    // approx liq: entry*(1 - 1/lev + mmr) long, entry*(1 + 1/lev - mmr) short
+    if (!p) return null;
+    if (p.side === "long") return p.entry * (1 - 1/p.lev + MAINT_MARGIN_RATE);
+    return p.entry * (1 + 1/p.lev - MAINT_MARGIN_RATE);
+  }
+
+  function canOpenNewPosition(side){
+    const hedge = hedgeModeSel.value === "on";
+    if (hedge) return true; // allow both
+    return state.positions.length === 0; // only one position allowed
+  }
+
+  function placeOrder(side){
+    if (!state.lastPrice) return alert("Noch keine Preise da.");
+    if (!canOpenNewPosition(side)) return alert("Hedge Mode OFF: nur eine Position erlaubt.");
+
+    const mode = marginModeSel.value; // isolated/cross
+    const type = orderTypeSel.value;
+
+    const margin = Number(marginInput.value);
+    const lev = Number(levInput.value);
+
+    if (!isFinite(margin) || margin <= 0) return alert("Margin ungültig.");
+    if (!isFinite(lev) || lev < 1) return alert("Hebel ungültig.");
+
+    const available = computeAvailable();
+    if (margin > available) return alert(`Nicht genug Available. Available: ${fmt(available,2)} USDT`);
+
+    const sl = numOrNull(slInput.value);
+    const tp = numOrNull(tpInput.value);
+
+    const limitPrice = numOrNull(limitPriceIn.value);
+    const stopPrice  = numOrNull(stopPriceIn.value);
+
+    // validation
+    if (type === "limit" && limitPrice == null) return alert("Limit-Preis fehlt.");
+    if (type === "stop_market" && stopPrice == null) return alert("Stop-Preis fehlt.");
+    if (type === "stop_limit" && (stopPrice == null || limitPrice == null)) return alert("Stop-Preis und Limit-Preis fehlen.");
+
+    if (type === "market"){
+      // execute immediately
+      executeOpen(side, mode, margin, lev, (state.lastPrice), "market", TAKER_FEE, sl, tp);
+      return;
+    }
+
+    // else create order
+    const o = {
+      id: uid("ord"),
+      side, mode, type,
+      margin, lev,
+      limitPrice, stopPrice,
+      sl, tp,
+      createdAt: Date.now(),
+      activated: (type === "limit"), // stop_limit becomes active after stop triggers
+    };
+    state.orders.push(o);
+    persist();
+    refreshAll();
+  }
+
+  function executeOpen(side, mode, margin, lev, fillPrice, reason, feeRate, sl, tp){
+    const notional = margin * lev;
+    const qty = notional / fillPrice;
+
+    // fee on entry
+    const entryFee = notional * feeRate;
+
+    // "reserve" margin behavior:
+    // isolated: margin is conceptually locked in position
+    // cross: margin not locked, but we still allow; we won't subtract margin from wallet (wallet is balance),
+    // because available is computed only for isolated locks. So for isolated we don't subtract margin from wallet either,
+    // we just "lock" it. That mimics futures wallet balance.
+    state.wallet -= entryFee;
+
+    const p = {
+      id: uid("pos"),
+      side,
+      mode,
+      entry: fillPrice,
+      qty,
+      margin,
+      lev,
+      sl, tp,
+      entryFee,
+      openedAt: Date.now(),
+    };
+
+    // if hedge off, ensure no open position
+    if (!canOpenNewPosition(side)) return;
+
+    // if hedge on, allow both. if off, replace none.
+    state.positions.push(p);
+
+    state.trades.unshift({
+      time: new Date().toISOString(),
+      action: `OPEN ${side.toUpperCase()}`,
+      price: fillPrice,
+      pnl: 0,
+      fees: entryFee,
       reason,
     });
 
-    state.position = null;
+    persist();
+    rebuildOverlays();
+    refreshAll();
+  }
+
+  function closePositionMarket(posId, reason="manual"){
+    const px = state.markPrice ?? state.lastPrice;
+    if (!px) return;
+
+    const idx = state.positions.findIndex(p => p.id === posId);
+    if (idx < 0) return;
+
+    const p = state.positions[idx];
+    const exit = px;
+
+    const pnl = posUPnL(p, exit);
+    const notionalClose = p.qty * exit;
+
+    // market close: taker fee
+    const exitFee = notionalClose * TAKER_FEE;
+
+    state.wallet += pnl;
+    state.wallet -= exitFee;
+
+    state.trades.unshift({
+      time: new Date().toISOString(),
+      action: `CLOSE ${p.side.toUpperCase()}`,
+      price: exit,
+      pnl,
+      fees: exitFee,
+      reason,
+    });
+
+    state.positions.splice(idx, 1);
+    persist();
+    rebuildOverlays();
+    refreshAll();
+  }
+
+  function closeAllPositionsMarket(reason="manual"){
+    const ids = state.positions.map(p => p.id);
+    for (const id of ids) closePositionMarket(id, reason);
+  }
+
+  function cancelOrder(orderId){
+    state.orders = state.orders.filter(o => o.id !== orderId);
     persist();
     refreshAll();
-    drawOrderLines();
   }
 
-  function onPriceUpdate(){
-    if (!state.position || !state.lastPrice) return;
+  function onTick(){
+    // match orders
+    matchOrders();
+    // enforce SL/TP + liquidation
+    enforceStopsAndLiquidations();
+    // account cross liquidation (sim)
+    enforceCrossAccountLiquidation();
+  }
 
-    const p = state.position;
-    const price = state.lastPrice;
+  function matchOrders(){
+    const px = state.lastPrice;
+    if (!px) return;
 
-    // TP / SL triggers
-    if (p.tp != null){
-      if (p.side === "long" && price >= p.tp) return closePosition("tp", p.tp);
-      if (p.side === "short" && price <= p.tp) return closePosition("tp", p.tp);
+    const remaining = [];
+
+    for (const o of state.orders){
+      let filled = false;
+
+      if (o.type === "limit"){
+        if (o.side === "long" && px <= o.limitPrice) filled = true;
+        if (o.side === "short" && px >= o.limitPrice) filled = true;
+        if (filled){
+          executeOpen(o.side, o.mode, o.margin, o.lev, o.limitPrice, "limit", MAKER_FEE, o.sl, o.tp);
+          continue;
+        }
+      }
+
+      if (o.type === "stop_market"){
+        if (o.side === "long" && px >= o.stopPrice) filled = true;
+        if (o.side === "short" && px <= o.stopPrice) filled = true;
+        if (filled){
+          executeOpen(o.side, o.mode, o.margin, o.lev, px, "stop-market", TAKER_FEE, o.sl, o.tp);
+          continue;
+        }
+      }
+
+      if (o.type === "stop_limit"){
+        // first, activate when stop hit
+        if (!o.activated){
+          if (o.side === "long" && px >= o.stopPrice) o.activated = true;
+          if (o.side === "short" && px <= o.stopPrice) o.activated = true;
+        }
+        // once active, behave like limit
+        if (o.activated){
+          if (o.side === "long" && px <= o.limitPrice) filled = true;
+          if (o.side === "short" && px >= o.limitPrice) filled = true;
+          if (filled){
+            executeOpen(o.side, o.mode, o.margin, o.lev, o.limitPrice, "stop-limit", MAKER_FEE, o.sl, o.tp);
+            continue;
+          }
+        }
+      }
+
+      remaining.push(o);
     }
-    if (p.sl != null){
-      if (p.side === "long" && price <= p.sl) return closePosition("sl", p.sl);
-      if (p.side === "short" && price >= p.sl) return closePosition("sl", p.sl);
+
+    state.orders = remaining;
+    persist();
+    refreshAll();
+  }
+
+  function enforceStopsAndLiquidations(){
+    const px = state.markPrice ?? state.lastPrice;
+    if (!px) return;
+
+    // SL/TP per position + isolated liquidation
+    const toClose = [];
+
+    for (const p of state.positions){
+      // TP
+      if (p.tp != null){
+        if (p.side === "long" && px >= p.tp) toClose.push([p.id, "tp"]);
+        if (p.side === "short" && px <= p.tp) toClose.push([p.id, "tp"]);
+      }
+      // SL
+      if (p.sl != null){
+        if (p.side === "long" && px <= p.sl) toClose.push([p.id, "sl"]);
+        if (p.side === "short" && px >= p.sl) toClose.push([p.id, "sl"]);
+      }
+
+      // Isolated liquidation
+      if (p.mode === "isolated"){
+        const liq = isolatedLiquidationPrice(p);
+        if (liq != null){
+          if (p.side === "long" && px <= liq) toClose.push([p.id, "liq-iso"]);
+          if (p.side === "short" && px >= liq) toClose.push([p.id, "liq-iso"]);
+        }
+      }
     }
 
-    // liquidation
-    const liq = liquidationPrice();
-    if (liq != null){
-      if (p.side === "long" && price <= liq) return closePosition("liquidation", liq);
-      if (p.side === "short" && price >= liq) return closePosition("liquidation", liq);
+    // close unique
+    const seen = new Set();
+    for (const [id, reason] of toClose){
+      if (seen.has(id)) continue;
+      seen.add(id);
+      closePositionMarket(id, reason);
     }
   }
 
-  function drawOrderLines(){
-    // draw horizontal lines as tiny series segments
-    entryLine.setData([]);
-    slLine.setData([]);
-    tpLine.setData([]);
+  function enforceCrossAccountLiquidation(){
+    // If there is any cross position, and account equity < maint sum => liquidate ALL cross positions (sim)
+    const crossPositions = state.positions.filter(p => p.mode === "cross");
+    if (crossPositions.length === 0) return;
 
-    if (!state.position) return;
-    const p = state.position;
+    const eq = computeEquity();
+    const maint = maintMarginSum();
 
-    const t = Math.floor(Date.now()/1000);
-    const t2 = t + 60;
-
-    entryLine.setData([{time:t, value:p.entry},{time:t2, value:p.entry}]);
-    if (p.sl != null) slLine.setData([{time:t, value:p.sl},{time:t2, value:p.sl}]);
-    if (p.tp != null) tpLine.setData([{time:t, value:p.tp},{time:t2, value:p.tp}]);
+    if (eq <= maint && (state.markPrice ?? state.lastPrice)){
+      // liquidate all cross positions
+      for (const p of [...crossPositions]){
+        closePositionMarket(p.id, "liq-cross(account)");
+      }
+    }
   }
 
   // -----------------------------
-  // UI refresh
+  // UI RENDER
   // -----------------------------
   function refreshStats(){
     const avail = computeAvailable();
-    const upnl = computeUPnL();
+    const upnl = totalUPnL();
     const eq = computeEquity();
 
-    walletVal.textContent = format(state.wallet, 2);
-    availVal.textContent  = format(avail, 2);
-    equityVal.textContent = format(eq, 2);
+    walletVal.textContent = fmt(state.wallet, 2);
+    availVal.textContent  = fmt(avail, 2);
+    equityVal.textContent = fmt(eq, 2);
 
-    upnlVal.textContent = (upnl >= 0 ? "+" : "") + format(upnl, 2);
+    upnlVal.textContent = (upnl >= 0 ? "+" : "") + fmt(upnl, 2);
     upnlVal.className = "v " + (upnl >= 0 ? "green" : "red");
 
-    // button states
-    closeBtn.disabled = !state.position;
-    buyBtn.disabled = !!state.position;
-    sellBtn.disabled = !!state.position;
+    fundingPnlVal.textContent = (state.fundingPnl >= 0 ? "+" : "") + fmt(state.fundingPnl, 2);
+    openOrdersVal.textContent = String(state.orders.length);
 
-    // position details
-    if (!state.position){
-      posDetails.innerHTML = "Keine offene Position";
+    // buttons
+    const hedge = hedgeModeSel.value === "on";
+    const allowNew = hedge ? true : (state.positions.length === 0);
+    buyBtn.disabled = !allowNew;
+    sellBtn.disabled = !allowNew;
+  }
+
+  function refreshPositions(){
+    if (state.positions.length === 0){
+      positionsWrap.innerHTML = "Keine offenen Positionen";
       return;
     }
-    const p = state.position;
-    const liq = liquidationPrice();
-    const notional = p.margin * p.lev;
+    const px = state.markPrice ?? state.lastPrice;
 
-    posDetails.innerHTML = `
-      <div class="posline"><span><span class="badge ${p.side}">${p.side.toUpperCase()}</span> &nbsp; ${p.lev}x</span><span></span></div>
-      <div class="posline"><span>Entry</span><span><strong>${format(p.entry,1)}</strong></span></div>
-      <div class="posline"><span>Mark</span><span><strong>${state.lastPrice?format(state.lastPrice,1):"–"}</strong></span></div>
-      <div class="posline"><span>Margin</span><span><strong>${format(p.margin,2)}</strong> USDT</span></div>
-      <div class="posline"><span>Notional</span><span><strong>${format(notional,2)}</strong> USDT</span></div>
-      <div class="posline"><span>Qty</span><span><strong>${p.qty.toFixed(6)}</strong> BTC</span></div>
-      <div class="posline"><span>SL / TP</span><span>${p.sl!=null?format(p.sl,1):"–"} / ${p.tp!=null?format(p.tp,1):"–"}</span></div>
-      <div class="posline"><span>Liq (sim)</span><span><strong>${liq?format(liq,1):"–"}</strong></span></div>
-    `;
+    positionsWrap.innerHTML = state.positions.map(p => {
+      const upnl = posUPnL(p, px);
+      const upnlColor = upnl >= 0 ? "var(--green)" : "var(--red)";
+      const liq = (p.mode === "isolated") ? isolatedLiquidationPrice(p) : null;
+
+      const modeBadge = p.mode === "cross"
+        ? `<span class="badge cross">CROSS</span>`
+        : `<span class="badge iso">ISO</span>`;
+
+      return `
+        <div class="muterow" style="align-items:center">
+          <span>
+            <span class="badge ${p.side}">${p.side.toUpperCase()}</span>
+            ${modeBadge}
+            <span class="badge">${p.lev}x</span>
+          </span>
+          <span class="tiny">
+            Entry <strong>${fmt(p.entry,1)}</strong> · Qty <strong>${p.qty.toFixed(6)}</strong>
+          </span>
+          <span class="tiny">
+            SL/TP <strong>${p.sl!=null?fmt(p.sl,1):"–"}</strong> / <strong>${p.tp!=null?fmt(p.tp,1):"–"}</strong>
+          </span>
+          <span class="tiny">
+            Liq <strong>${liq!=null?fmt(liq,1):"—"}</strong>
+          </span>
+          <span style="color:${upnlColor};font-weight:900">${(upnl>=0?"+":"") + fmt(upnl,2)}</span>
+          <button class="smallbtn" data-close="${p.id}">Close</button>
+        </div>
+      `;
+    }).join("");
+
+    positionsWrap.querySelectorAll("[data-close]").forEach(btn => {
+      btn.addEventListener("click", () => closePositionMarket(btn.dataset.close, "manual"));
+    });
+  }
+
+  function refreshOrders(){
+    if (state.orders.length === 0){
+      ordersWrap.innerHTML = "Keine offenen Orders";
+      return;
+    }
+
+    ordersWrap.innerHTML = state.orders.map(o => {
+      const modeBadge = o.mode === "cross"
+        ? `<span class="badge cross">CROSS</span>`
+        : `<span class="badge iso">ISO</span>`;
+
+      const typeLabel = ({
+        market:"Market",
+        limit:"Limit",
+        stop_market:"Stop-Market",
+        stop_limit:"Stop-Limit"
+      })[o.type] || o.type;
+
+      const lp = (o.limitPrice!=null) ? fmt(o.limitPrice,1) : "–";
+      const sp = (o.stopPrice!=null) ? fmt(o.stopPrice,1) : "–";
+      const act = (o.type==="stop_limit") ? (o.activated ? "active" : "waiting") : "";
+
+      return `
+        <div class="muterow" style="align-items:center">
+          <span>
+            <span class="badge ${o.side}">${o.side.toUpperCase()}</span>
+            ${modeBadge}
+            <span class="badge">${o.lev}x</span>
+          </span>
+          <span class="tiny">
+            <strong>${typeLabel}</strong> ${act ? `(${act})` : ""}
+            · M ${fmt(o.margin,2)} · Lmt ${lp} · Stop ${sp}
+          </span>
+          <span class="tiny">
+            SL/TP ${o.sl!=null?fmt(o.sl,1):"–"} / ${o.tp!=null?fmt(o.tp,1):"–"}
+          </span>
+          <button class="smallbtn" data-cancel="${o.id}">Cancel</button>
+        </div>
+      `;
+    }).join("");
+
+    ordersWrap.querySelectorAll("[data-cancel]").forEach(btn => {
+      btn.addEventListener("click", () => cancelOrder(btn.dataset.cancel));
+    });
   }
 
   function refreshHistory(){
     histBody.innerHTML = "";
-    state.trades.slice(0, 25).forEach(tr => {
-      const pnl = tr.pnl;
-      const pnlColor = pnl >= 0 ? "style='color:var(--green);font-weight:800'" : "style='color:var(--red);font-weight:800'";
-      const sideColor = tr.side === "long" ? "var(--green)" : "var(--red)";
-      const reason = tr.reason ? ` <span class="badge" title="Reason">${tr.reason}</span>` : "";
-
+    state.trades.slice(0, 30).forEach(tr => {
+      const pnl = tr.pnl ?? 0;
+      const pnlStyle = pnl >= 0 ? "color:var(--green);font-weight:900" : "color:var(--red);font-weight:900";
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${new Date(tr.time).toLocaleString()}</td>
-        <td><strong style="color:${sideColor}">${tr.side.toUpperCase()}</strong>${reason}</td>
-        <td class="right">${format(tr.entry,1)}</td>
-        <td class="right">${format(tr.exit,1)}</td>
-        <td class="right" ${pnlColor}>${(pnl>=0?"+":"") + format(pnl,2)}</td>
-        <td class="right">${format(tr.fees,2)}</td>
-        <td class="right">${tr.lev}x</td>
+        <td><strong>${tr.action}</strong></td>
+        <td class="right">${fmt(tr.price,1)}</td>
+        <td class="right" style="${pnlStyle}">${(pnl>=0?"+":"")+fmt(pnl,2)}</td>
+        <td class="right">${fmt(tr.fees||0,2)}</td>
+        <td class="right">${tr.reason||""}</td>
       `;
       histBody.appendChild(row);
     });
@@ -658,27 +1151,39 @@
   function refreshAll(){
     tfLabelEl.textContent = state.tf;
     document.querySelectorAll("#tfButtons button").forEach(x => x.classList.toggle("active", x.dataset.tf === state.tf));
+    refreshFundingHeader();
     refreshStats();
+    refreshPositions();
+    refreshOrders();
     refreshHistory();
   }
+
+  // -----------------------------
+  // EVENTS
+  // -----------------------------
+  buyBtn.addEventListener("click", () => placeOrder("long"));
+  sellBtn.addEventListener("click", () => placeOrder("short"));
+
+  // When SL/TP changed, update last created position? – we keep it as order/position fields.
+  // (Editing SL/TP live: click in Positions list? If you want, sag Bescheid.)
 
   // -----------------------------
   // PERSISTENCE
   // -----------------------------
   function persist(){
-    try{
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch(_){}
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(_){}
   }
   function loadState(){
     try{
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return defaultState();
       const obj = JSON.parse(raw);
-      // minimal validation
       if (typeof obj.wallet !== "number") return defaultState();
-      if (!Array.isArray(obj.trades)) obj.trades = [];
+      obj.positions ||= [];
+      obj.orders ||= [];
+      obj.trades ||= [];
       if (!obj.tf) obj.tf = "1m";
+      if (typeof obj.fundingPnl !== "number") obj.fundingPnl = 0;
       return obj;
     } catch(_){
       return defaultState();
@@ -688,29 +1193,14 @@
   // -----------------------------
   // HELPERS
   // -----------------------------
-  function format(n, d=2){
+  function fmt(n, d=2){
     if (!isFinite(n)) return "–";
-    return Number(n).toLocaleString("de-DE", {minimumFractionDigits:d, maximumFractionDigits:d});
+    return Number(n).toLocaleString("de-DE",{minimumFractionDigits:d,maximumFractionDigits:d});
   }
-
-  // -----------------------------
-  // EVENTS
-  // -----------------------------
-  buyBtn.addEventListener("click", () => openPosition("long"));
-  sellBtn.addEventListener("click", () => openPosition("short"));
-  closeBtn.addEventListener("click", () => closePosition("manual"));
-
-  // when SL/TP changed while position open, update position
-  [slInput, tpInput].forEach(inp => inp.addEventListener("change", () => {
-    if (!state.position) return;
-    const sl = Number(slInput.value);
-    const tp = Number(tpInput.value);
-    state.position.sl = isFinite(sl) ? sl : null;
-    state.position.tp = isFinite(tp) ? tp : null;
-    persist();
-    refreshAll();
-    drawOrderLines();
-  }));
+  function numOrNull(v){
+    const n = Number(v);
+    return isFinite(n) && v !== "" ? n : null;
+  }
 
   // -----------------------------
   // INIT
@@ -718,10 +1208,13 @@
   refreshAll();
   levLabel.textContent = `${levInput.value}x`;
 
-  loadCandles(state.tf).then(setChartData).then(() => {
-    drawOrderLines();
+  loadCandles(state.tf).then(setChartData).then(async () => {
+    try{ await fetchPremiumIndex(); }catch(_){}
     reconnectWS();
   });
+
+  // keep funding index fresh every ~20s (fallback)
+  setInterval(() => { fetchPremiumIndex().catch(()=>{}); }, 20000);
 
 })();
 </script>
